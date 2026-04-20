@@ -1,0 +1,203 @@
+import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../app/theme/app_colors.dart';
+import '../../../../core/providers/core_providers.dart';
+import '../../../../core/utils/streak_utils.dart';
+import '../../../../shared/widgets/section_card.dart';
+import '../../../habits/presentation/providers/habits_controller.dart';
+import '../../../journal/presentation/providers/journal_controller.dart';
+import '../../../mood/presentation/providers/mood_controller.dart';
+
+class DashboardPage extends ConsumerWidget {
+  const DashboardPage({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final moods = ref.watch(moodControllerProvider).asData?.value ?? [];
+    final journals = ref.watch(journalControllerProvider).asData?.value ?? [];
+    final habits = ref.watch(habitsControllerProvider).asData?.value ?? [];
+    final activityAsync = ref.watch(activityProvider);
+
+    final averageMood = moods.isEmpty
+        ? 0.0
+        : moods.map((entry) => entry.score).reduce((a, b) => a + b) / moods.length;
+    final strongestHabitStreak = habits.isEmpty
+        ? 0
+        : habits.map((record) => calculateCurrentStreak(record.completedDates)).reduce((a, b) => a > b ? a : b);
+
+    final moodSpots = moods.take(7).toList().reversed.toList();
+    final locationInsights = _buildLocationInsight(moods);
+    final latestActivity = activityAsync.asData?.value;
+
+    return ListView(
+      padding: const EdgeInsets.all(20),
+      children: [
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppColors.berry,
+                AppColors.plum,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(28),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Today\'s wellness snapshot',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'A calm overview of your mood, consistency, and reflection habits.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white70),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 18),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 1.2,
+          children: [
+            _StatCard(title: 'Average Mood', value: averageMood == 0 ? '--' : averageMood.toStringAsFixed(1)),
+            _StatCard(title: 'Journal Entries', value: '${journals.length}'),
+            _StatCard(title: 'Best Habit Streak', value: '$strongestHabitStreak days'),
+            _StatCard(
+              title: 'Activity Signal',
+              value: latestActivity?.label ?? 'Pending',
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (moodSpots.isNotEmpty)
+          SectionCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Mood trend', style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 18),
+                SizedBox(
+                  height: 180,
+                  child: LineChart(
+                    LineChartData(
+                      minY: 1,
+                      maxY: 5,
+                      gridData: const FlGridData(show: false),
+                      borderData: FlBorderData(show: false),
+                      titlesData: const FlTitlesData(show: false),
+                      lineBarsData: [
+                        LineChartBarData(
+                          spots: [
+                            for (var i = 0; i < moodSpots.length; i++)
+                              FlSpot(i.toDouble(), moodSpots[i].score.toDouble()),
+                          ],
+                          isCurved: true,
+                          color: Theme.of(context).colorScheme.primary,
+                          barWidth: 4,
+                          dotData: const FlDotData(show: true),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        const SizedBox(height: 12),
+        SectionCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Location insight', style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              Text(locationInsights),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        SectionCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Sensor activity', style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              Text(
+                latestActivity == null
+                    ? 'Move the phone a little and this card will update.'
+                    : 'Current motion state: ${latestActivity.label} (${latestActivity.motionLevel.toStringAsFixed(2)}). '
+                        'This uses the accelerometer to estimate whether you are still or moving around.',
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _buildLocationInsight(List<dynamic> moods) {
+    final byLocation = <String, List<int>>{};
+    for (final mood in moods) {
+      final location = mood.locationName;
+      if (location == null || location.isEmpty) continue;
+      byLocation.putIfAbsent(location, () => []);
+      byLocation[location]!.add(mood.score as int);
+    }
+    if (byLocation.isEmpty) {
+      return 'Enable location on check-ins to discover which environments support your calmest moments.';
+    }
+    final best = byLocation.entries.reduce((a, b) {
+      final aAvg = a.value.reduce((x, y) => x + y) / a.value.length;
+      final bAvg = b.value.reduce((x, y) => x + y) / b.value.length;
+      return aAvg >= bAvg ? a : b;
+    });
+    return 'You tend to feel best around ${best.key}, based on your saved mood entries there.';
+  }
+}
+
+class _StatCard extends StatelessWidget {
+  const _StatCard({
+    required this.title,
+    required this.value,
+  });
+
+  final String title;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return SectionCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(title, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.muted)),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: AppColors.plum,
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+final activityProvider = StreamProvider((ref) {
+  return ref.read(sensorServiceProvider).activityStream();
+});
