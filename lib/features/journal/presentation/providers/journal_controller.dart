@@ -9,16 +9,16 @@ final journalControllerProvider =
 class JournalController extends AsyncNotifier<List<JournalEntry>> {
   @override
   Future<List<JournalEntry>> build() async {
-    return ref.read(databaseServiceProvider).fetchJournals();
+    return ref.read(mindBloomRepositoryProvider).fetchJournals();
   }
 
   Future<void> saveEntry(JournalEntry entry) async {
-    await ref.read(databaseServiceProvider).upsertJournal(entry);
-    state = AsyncData(await ref.read(databaseServiceProvider).fetchJournals());
+    await ref.read(mindBloomRepositoryProvider).saveJournal(entry);
+    state = AsyncData(await ref.read(mindBloomRepositoryProvider).fetchJournals());
   }
 
   Future<void> deleteEntry(String id) async {
-    await ref.read(databaseServiceProvider).deleteJournal(id);
-    state = AsyncData(await ref.read(databaseServiceProvider).fetchJournals());
+    await ref.read(mindBloomRepositoryProvider).deleteJournal(id);
+    state = AsyncData(await ref.read(mindBloomRepositoryProvider).fetchJournals());
   }
 }

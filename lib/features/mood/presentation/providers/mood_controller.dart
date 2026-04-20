@@ -10,7 +10,7 @@ final moodControllerProvider =
 class MoodController extends AsyncNotifier<List<MoodEntry>> {
   @override
   Future<List<MoodEntry>> build() async {
-    return ref.read(databaseServiceProvider).fetchMoods();
+    return ref.read(mindBloomRepositoryProvider).fetchMoods();
   }
 
   Future<void> addMood({
@@ -32,12 +32,12 @@ class MoodController extends AsyncNotifier<List<MoodEntry>> {
       latitude: location?.latitude,
       longitude: location?.longitude,
     );
-    await ref.read(databaseServiceProvider).upsertMood(entry);
-    state = AsyncData(await ref.read(databaseServiceProvider).fetchMoods());
+    await ref.read(mindBloomRepositoryProvider).saveMood(entry);
+    state = AsyncData(await ref.read(mindBloomRepositoryProvider).fetchMoods());
   }
 
   Future<void> deleteMood(String id) async {
-    await ref.read(databaseServiceProvider).deleteMood(id);
-    state = AsyncData(await ref.read(databaseServiceProvider).fetchMoods());
+    await ref.read(mindBloomRepositoryProvider).deleteMood(id);
+    state = AsyncData(await ref.read(mindBloomRepositoryProvider).fetchMoods());
   }
 }

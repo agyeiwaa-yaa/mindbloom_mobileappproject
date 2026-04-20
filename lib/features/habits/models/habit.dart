@@ -23,6 +23,32 @@ class Habit {
   final DateTime createdAt;
   final bool archived;
 
+  Habit copyWith({
+    String? id,
+    String? name,
+    String? iconKey,
+    int? colorValue,
+    int? targetPerWeek,
+    bool? reminderEnabled,
+    int? reminderHour,
+    int? reminderMinute,
+    DateTime? createdAt,
+    bool? archived,
+  }) {
+    return Habit(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      iconKey: iconKey ?? this.iconKey,
+      colorValue: colorValue ?? this.colorValue,
+      targetPerWeek: targetPerWeek ?? this.targetPerWeek,
+      reminderEnabled: reminderEnabled ?? this.reminderEnabled,
+      reminderHour: reminderHour ?? this.reminderHour,
+      reminderMinute: reminderMinute ?? this.reminderMinute,
+      createdAt: createdAt ?? this.createdAt,
+      archived: archived ?? this.archived,
+    );
+  }
+
   Map<String, Object?> toMap() {
     return {
       'id': id,
@@ -38,6 +64,21 @@ class Habit {
     };
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'icon_key': iconKey,
+      'color_value': colorValue,
+      'target_per_week': targetPerWeek,
+      'reminder_enabled': reminderEnabled,
+      'reminder_hour': reminderHour,
+      'reminder_minute': reminderMinute,
+      'created_at': createdAt.toIso8601String(),
+      'archived': archived,
+    };
+  }
+
   factory Habit.fromMap(Map<String, Object?> map) {
     return Habit(
       id: map['id'] as String,
@@ -50,6 +91,21 @@ class Habit {
       reminderMinute: map['reminder_minute'] as int?,
       createdAt: DateTime.parse(map['created_at'] as String),
       archived: (map['archived'] as int? ?? 0) == 1,
+    );
+  }
+
+  factory Habit.fromJson(Map<String, dynamic> json) {
+    return Habit(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      iconKey: json['icon_key'] as String,
+      colorValue: (json['color_value'] as num).toInt(),
+      targetPerWeek: (json['target_per_week'] as num).toInt(),
+      reminderEnabled: json['reminder_enabled'] == true || json['reminder_enabled'] == 1,
+      reminderHour: (json['reminder_hour'] as num?)?.toInt(),
+      reminderMinute: (json['reminder_minute'] as num?)?.toInt(),
+      createdAt: DateTime.parse(json['created_at'] as String),
+      archived: json['archived'] == true || json['archived'] == 1,
     );
   }
 }

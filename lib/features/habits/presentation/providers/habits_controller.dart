@@ -13,27 +13,27 @@ final habitsControllerProvider =
 class HabitsController extends AsyncNotifier<List<HabitRecord>> {
   @override
   Future<List<HabitRecord>> build() async {
-    return ref.read(databaseServiceProvider).fetchHabitRecords();
+    return ref.read(mindBloomRepositoryProvider).fetchHabitRecords();
   }
 
   Future<void> saveHabit(Habit habit) async {
-    await ref.read(databaseServiceProvider).upsertHabit(habit);
+    await ref.read(mindBloomRepositoryProvider).saveHabit(habit);
     await _syncHabitReminder(habit, ref.read(notificationServiceProvider));
-    state = AsyncData(await ref.read(databaseServiceProvider).fetchHabitRecords());
+    state = AsyncData(await ref.read(mindBloomRepositoryProvider).fetchHabitRecords());
   }
 
   Future<void> archiveHabit(String habitId) async {
-    await ref.read(databaseServiceProvider).archiveHabit(habitId);
+    await ref.read(mindBloomRepositoryProvider).archiveHabit(habitId);
     await ref.read(notificationServiceProvider).cancel(habitId.hashCode);
-    state = AsyncData(await ref.read(databaseServiceProvider).fetchHabitRecords());
+    state = AsyncData(await ref.read(mindBloomRepositoryProvider).fetchHabitRecords());
   }
 
   Future<void> toggleToday(String habitId) async {
-    await ref.read(databaseServiceProvider).toggleHabitCompletion(
+    await ref.read(mindBloomRepositoryProvider).toggleHabitCompletion(
           habitId: habitId,
           dayKey: MindBloomDateUtils.dayKey(DateTime.now()),
         );
-    state = AsyncData(await ref.read(databaseServiceProvider).fetchHabitRecords());
+    state = AsyncData(await ref.read(mindBloomRepositoryProvider).fetchHabitRecords());
   }
 
   Future<void> seedDefaultHabits() async {
@@ -66,9 +66,9 @@ class HabitsController extends AsyncNotifier<List<HabitRecord>> {
       ),
     ];
     for (final habit in defaults) {
-      await ref.read(databaseServiceProvider).upsertHabit(habit);
+      await ref.read(mindBloomRepositoryProvider).saveHabit(habit);
     }
-    state = AsyncData(await ref.read(databaseServiceProvider).fetchHabitRecords());
+    state = AsyncData(await ref.read(mindBloomRepositoryProvider).fetchHabitRecords());
   }
 
   Future<void> _syncHabitReminder(Habit habit, NotificationService service) async {

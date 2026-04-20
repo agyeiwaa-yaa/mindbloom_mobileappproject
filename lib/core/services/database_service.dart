@@ -116,6 +116,16 @@ class DatabaseService {
     await db.delete('mood_entries', where: 'id = ?', whereArgs: [id]);
   }
 
+  Future<void> replaceMoods(List<MoodEntry> entries) async {
+    final db = await database;
+    final batch = db.batch();
+    batch.delete('mood_entries');
+    for (final entry in entries) {
+      batch.insert('mood_entries', entry.toMap());
+    }
+    await batch.commit(noResult: true);
+  }
+
   Future<List<JournalEntry>> fetchJournals() async {
     final db = await database;
     final rows = await db.query('journal_entries', orderBy: 'created_at DESC');
@@ -136,6 +146,16 @@ class DatabaseService {
     await db.delete('journal_entries', where: 'id = ?', whereArgs: [id]);
   }
 
+  Future<void> replaceJournals(List<JournalEntry> entries) async {
+    final db = await database;
+    final batch = db.batch();
+    batch.delete('journal_entries');
+    for (final entry in entries) {
+      batch.insert('journal_entries', entry.toMap());
+    }
+    await batch.commit(noResult: true);
+  }
+
   Future<List<Habit>> fetchHabits() async {
     final db = await database;
     final rows = await db.query('habits', where: 'archived = 0', orderBy: 'created_at DESC');
@@ -154,6 +174,23 @@ class DatabaseService {
   Future<void> archiveHabit(String id) async {
     final db = await database;
     await db.update('habits', {'archived': 1}, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> replaceHabits(List<HabitRecord> records) async {
+    final db = await database;
+    final batch = db.batch();
+    batch.delete('habit_completions');
+    batch.delete('habits');
+    for (final record in records) {
+      batch.insert('habits', record.habit.toMap());
+      for (final date in record.completedDates) {
+        batch.insert('habit_completions', {
+          'habit_id': record.habit.id,
+          'completed_on': date,
+        });
+      }
+    }
+    await batch.commit(noResult: true);
   }
 
   Future<List<String>> fetchHabitCompletionDates(String habitId) async {

@@ -114,12 +114,19 @@ class _JournalEditorPageState extends ConsumerState<JournalEditorPage> {
                 const SizedBox(height: 16),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(20),
-                  child: Image.file(
-                    File(_imagePath!),
-                    height: 180,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
+                  child: _imagePath!.startsWith('http')
+                      ? Image.network(
+                          _imagePath!,
+                          height: 180,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        )
+                      : Image.file(
+                          File(_imagePath!),
+                          height: 180,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
                 ),
               ],
               const SizedBox(height: 24),

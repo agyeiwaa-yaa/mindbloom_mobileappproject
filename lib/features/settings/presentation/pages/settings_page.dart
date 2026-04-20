@@ -13,6 +13,7 @@ class SettingsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settingsAsync = ref.watch(settingsControllerProvider);
     final lockActions = ref.read(appSessionProvider.notifier);
+    final backendHealth = ref.watch(backendHealthProvider);
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
@@ -115,13 +116,35 @@ class SettingsPage extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               SectionCard(
-                child: const ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(Icons.cloud_sync_outlined),
-                  title: Text('Remote sync status'),
-                  subtitle: Text(
-                    'Not connected yet. This app currently saves data on the phone, not in phpMyAdmin.',
-                  ),
+                child: Column(
+                  children: [
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.cloud_sync_outlined),
+                      title: const Text('Remote sync status'),
+                      subtitle: Text(
+                        backendHealth.when(
+                          data: (connected) => connected
+                              ? 'Connected to your PHP backend. New entries should sync to MySQL.'
+                              : 'Not connected yet. Add your deployed API URL below and test the connection.',
+                          error: (error, stackTrace) => 'Backend check failed: $error',
+                          loading: () => 'Checking backend connection...',
+                        ),
+                      ),
+                    ),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.link_outlined),
+                      title: const Text('Backend URL'),
+                      subtitle: Text(
+                        settings.apiBaseUrl?.isNotEmpty == true
+                            ? settings.apiBaseUrl!
+                            : 'Not configured',
+                      ),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => _showBackendSheet(context, ref, settings.apiBaseUrl),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -166,6 +189,50 @@ class SettingsPage extends ConsumerWidget {
                   if (context.mounted) Navigator.of(context).pop();
                 },
                 child: const Text('Save passcode'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showBackendSheet(BuildContext context, WidgetRef ref, String? currentUrl) async {
+    final controller = TextEditingController(text: currentUrl ?? '');
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.fromLTRB(
+            20,
+            20,
+            20,
+            MediaQuery.of(context).viewInsets.bottom + 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Connect PHP Backend', style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 12),
+              const Text('Use the deployed folder URL, for example: https://your-domain.com/mindbloom_api'),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controller,
+                keyboardType: TextInputType.url,
+                decoration: const InputDecoration(labelText: 'API base URL'),
+              ),
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: () async {
+                  final url = controller.text.trim();
+                  if (url.isEmpty) return;
+                  await ref.read(settingsControllerProvider.notifier).setApiBaseUrl(url);
+                  if (!context.mounted) return;
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Save backend URL'),
               ),
             ],
           ),

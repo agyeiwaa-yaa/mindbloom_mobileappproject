@@ -75,8 +75,28 @@ class _JournalPageState extends ConsumerState<JournalPage> {
                 );
               }
 
+              final imageEntries = filtered.where((entry) => (entry.imagePath ?? '').isNotEmpty).toList();
               return Column(
-                children: filtered.map((entry) => _JournalTile(entry: entry)).toList(),
+                children: [
+                  if (imageEntries.isNotEmpty) ...[
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text('Photo memories', style: Theme.of(context).textTheme.titleMedium),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: 120,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: imageEntries.length,
+                        separatorBuilder: (context, index) => const SizedBox(width: 10),
+                        itemBuilder: (context, index) => _JournalImageCard(entry: imageEntries[index]),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                  ],
+                  ...filtered.map((entry) => _JournalTile(entry: entry)),
+                ],
               );
             },
             error: (error, _) => Text('Unable to load journal entries: $error'),
@@ -97,6 +117,34 @@ class _JournalPageState extends ConsumerState<JournalPage> {
   }
 }
 
+class _JournalImageCard extends StatelessWidget {
+  const _JournalImageCard({required this.entry});
+
+  final JournalEntry entry;
+
+  @override
+  Widget build(BuildContext context) {
+    final imagePath = entry.imagePath!;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: SizedBox(
+        width: 120,
+        child: imagePath.startsWith('http')
+            ? Image.network(imagePath, fit: BoxFit.cover)
+            : Image.file(
+                File(imagePath),
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  color: Colors.black12,
+                  alignment: Alignment.center,
+                  child: const Icon(Icons.broken_image_outlined),
+                ),
+              ),
+      ),
+    );
+  }
+}
+
 class _JournalTile extends ConsumerWidget {
   const _JournalTile({required this.entry});
 
@@ -105,7 +153,8 @@ class _JournalTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final hasImage = (entry.imagePath ?? '').isNotEmpty;
-    final imageExists = hasImage ? File(entry.imagePath!).existsSync() : false;
+    final isRemoteImage = hasImage && entry.imagePath!.startsWith('http');
+    final imageExists = isRemoteImage || (hasImage ? File(entry.imagePath!).existsSync() : false);
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: SectionCard(
@@ -118,13 +167,21 @@ class _JournalTile extends ConsumerWidget {
               if (imageExists)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(20),
-                  child: Image.file(
-                    File(entry.imagePath!),
-                    height: 160,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
-                  ),
+                  child: isRemoteImage
+                      ? Image.network(
+                          entry.imagePath!,
+                          height: 160,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                        )
+                      : Image.file(
+                          File(entry.imagePath!),
+                          height: 160,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                        ),
                 ),
               if (hasImage && !imageExists)
                 Container(

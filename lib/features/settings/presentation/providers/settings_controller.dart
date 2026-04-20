@@ -9,6 +9,10 @@ final settingsControllerProvider =
 final appSessionProvider =
     NotifierProvider<AppSessionController, bool>(AppSessionController.new);
 
+final backendHealthProvider = FutureProvider<bool>((ref) async {
+  return ref.read(apiServiceProvider).ping();
+});
+
 class SettingsController extends AsyncNotifier<AppSettingsState> {
   static const _passcodeKey = 'mindbloom_passcode';
 
@@ -18,12 +22,14 @@ class SettingsController extends AsyncNotifier<AppSettingsState> {
     final onboarding = await db.getSetting('onboarding_complete') == 'true';
     final biometrics = await db.getSetting('biometrics_enabled') == 'true';
     final passcode = await db.getSetting('passcode_enabled') == 'true';
+    final apiBaseUrl = await db.getSetting('api_base_url');
     final reminderHour = int.tryParse((await db.getSetting('journal_reminder_hour')) ?? '');
     final reminderMinute = int.tryParse((await db.getSetting('journal_reminder_minute')) ?? '');
     return AppSettingsState(
       onboardingComplete: onboarding,
       biometricsEnabled: biometrics,
       passcodeEnabled: passcode,
+      apiBaseUrl: apiBaseUrl,
       journalReminderHour: reminderHour,
       journalReminderMinute: reminderMinute,
     );
@@ -71,6 +77,13 @@ class SettingsController extends AsyncNotifier<AppSettingsState> {
       journalReminderHour: hour,
       journalReminderMinute: minute,
     ));
+  }
+
+  Future<void> setApiBaseUrl(String url) async {
+    await ref.read(apiServiceProvider).setBaseUrl(url);
+    await ref.read(apiServiceProvider).bootstrapUser();
+    ref.invalidate(backendHealthProvider);
+    state = AsyncData((await future).copyWith(apiBaseUrl: url));
   }
 }
 

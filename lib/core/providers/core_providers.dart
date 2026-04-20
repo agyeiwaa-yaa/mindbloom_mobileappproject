@@ -1,9 +1,11 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../services/api_service.dart';
 import '../services/biometric_service.dart';
 import '../services/database_service.dart';
 import '../services/location_service.dart';
+import '../services/mindbloom_repository.dart';
 import '../services/notification_service.dart';
 import '../services/sensor_service.dart';
 import '../services/storage_service.dart';
@@ -36,4 +38,18 @@ final sensorServiceProvider = Provider<SensorService>((ref) {
 
 final storageServiceProvider = Provider<StorageService>((ref) {
   return StorageService();
+});
+
+final apiServiceProvider = Provider<ApiService>((ref) {
+  return ApiService(
+    databaseService: ref.read(databaseServiceProvider),
+    storageService: ref.read(storageServiceProvider),
+  );
+});
+
+final mindBloomRepositoryProvider = Provider<MindBloomRepository>((ref) {
+  return MindBloomRepository(
+    databaseService: ref.read(databaseServiceProvider),
+    apiService: ref.read(apiServiceProvider),
+  );
 });

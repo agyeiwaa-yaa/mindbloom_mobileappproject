@@ -1,6 +1,8 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../core/providers/core_providers.dart';
@@ -8,6 +10,7 @@ import '../../../../core/utils/streak_utils.dart';
 import '../../../../shared/widgets/section_card.dart';
 import '../../../habits/presentation/providers/habits_controller.dart';
 import '../../../journal/presentation/providers/journal_controller.dart';
+import '../../../mood/models/mood_entry.dart';
 import '../../../mood/presentation/providers/mood_controller.dart';
 
 class DashboardPage extends ConsumerWidget {
@@ -30,6 +33,10 @@ class DashboardPage extends ConsumerWidget {
     final moodSpots = moods.take(7).toList().reversed.toList();
     final locationInsights = _buildLocationInsight(moods);
     final latestActivity = activityAsync.asData?.value;
+    final mapMoods = moods.where((entry) => entry.latitude != null && entry.longitude != null).toList();
+    final bestMood = mapMoods.isEmpty
+        ? null
+        : mapMoods.reduce((a, b) => a.score >= b.score ? a : b);
 
     return ListView(
       padding: const EdgeInsets.all(20),
@@ -127,6 +134,63 @@ class DashboardPage extends ConsumerWidget {
             ],
           ),
         ),
+        if (mapMoods.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          SectionCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Mood map', style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 8),
+                Text(
+                  bestMood == null
+                      ? 'Attach location to mood entries to see your calmest places.'
+                      : 'The highlighted point marks one of your highest mood check-ins.',
+                ),
+                const SizedBox(height: 14),
+                SizedBox(
+                  height: 240,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(22),
+                    child: FlutterMap(
+                      options: MapOptions(
+                        initialCenter: LatLng(bestMood!.latitude!, bestMood.longitude!),
+                        initialZoom: 13,
+                      ),
+                      children: [
+                        TileLayer(
+                          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                          userAgentPackageName: 'com.maamebasoah.mindbloom',
+                        ),
+                        MarkerLayer(
+                          markers: mapMoods
+                              .map(
+                                (entry) => Marker(
+                                  point: LatLng(entry.latitude!, entry.longitude!),
+                                  width: 44,
+                                  height: 44,
+                                  child: Icon(
+                                    Icons.location_on,
+                                    color: entry.id == bestMood.id ? AppColors.berry : _moodColor(entry.score),
+                                    size: entry.id == bestMood.id ? 40 : 32,
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                        ),
+                        RichAttributionWidget(
+                          attributions: const [
+                            TextSourceAttribution('OpenStreetMap contributors'),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
         const SizedBox(height: 12),
         SectionCard(
           child: Column(
@@ -147,13 +211,13 @@ class DashboardPage extends ConsumerWidget {
     );
   }
 
-  String _buildLocationInsight(List<dynamic> moods) {
+  String _buildLocationInsight(List<MoodEntry> moods) {
     final byLocation = <String, List<int>>{};
     for (final mood in moods) {
       final location = mood.locationName;
       if (location == null || location.isEmpty) continue;
       byLocation.putIfAbsent(location, () => []);
-      byLocation[location]!.add(mood.score as int);
+      byLocation[location]!.add(mood.score);
     }
     if (byLocation.isEmpty) {
       return 'Enable location on check-ins to discover which environments support your calmest moments.';
@@ -164,6 +228,21 @@ class DashboardPage extends ConsumerWidget {
       return aAvg >= bAvg ? a : b;
     });
     return 'You tend to feel best around ${best.key}, based on your saved mood entries there.';
+  }
+
+  Color _moodColor(int score) {
+    switch (score) {
+      case 5:
+        return AppColors.gold;
+      case 4:
+        return AppColors.berry;
+      case 3:
+        return AppColors.rose;
+      case 2:
+        return AppColors.coral;
+      default:
+        return AppColors.plum;
+    }
   }
 }
 
