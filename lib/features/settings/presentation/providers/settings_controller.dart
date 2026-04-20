@@ -85,6 +85,12 @@ class SettingsController extends AsyncNotifier<AppSettingsState> {
     ref.invalidate(backendHealthProvider);
     state = AsyncData((await future).copyWith(apiBaseUrl: url));
   }
+
+  Future<void> clearApiBaseUrl() async {
+    await ref.read(databaseServiceProvider).deleteSetting('api_base_url');
+    ref.invalidate(backendHealthProvider);
+    state = AsyncData((await future).copyWith(apiBaseUrl: null));
+  }
 }
 
 class AppSessionController extends Notifier<bool> {

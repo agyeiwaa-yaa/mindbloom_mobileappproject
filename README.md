@@ -66,6 +66,21 @@ backend/api/config.php
 
 Then replace the placeholders with your real database values.
 
+Example server-side `config.php` structure:
+
+```php
+<?php
+
+return [
+    'db_host' => 'YOUR_DB_HOST',
+    'db_port' => 3306,
+    'db_name' => 'YOUR_DB_NAME',
+    'db_user' => 'YOUR_DB_USER',
+    'db_pass' => 'YOUR_DB_PASSWORD',
+    'upload_dir' => __DIR__ . '/../uploads',
+];
+```
+
 ### 3. Import the schema
 
 Import:
@@ -85,6 +100,12 @@ https://your-domain-or-server-path/mindbloom_api/api/health.php
 ```
 
 You should get a JSON response showing success.
+
+Important:
+
+- your `phpMyAdmin` URL is not the same thing as the API URL
+- the Flutter app should point to the public `.../api` folder, not to the phpMyAdmin page
+- a working API base URL usually looks like `https://your-domain.com/mindbloom_api/api`
 
 ## Flutter App Setup
 
@@ -115,6 +136,14 @@ https://your-domain-or-server-path/mindbloom_api/api
 ```
 
 The sync card should switch from not connected to connected once the API is reachable.
+
+If it still says not connected:
+
+- confirm the URL ends with `/api`
+- open `health.php` manually in a browser
+- make sure `api/config.php` exists on the server
+- make sure `uploads/` is writable by PHP
+- confirm the MySQL schema was imported successfully
 
 ## Build APK
 

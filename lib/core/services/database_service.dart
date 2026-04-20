@@ -278,6 +278,11 @@ class DatabaseService {
     );
   }
 
+  Future<void> deleteSetting(String key) async {
+    final db = await database;
+    await db.delete('app_settings', where: 'key = ?', whereArgs: [key]);
+  }
+
   Future<List<HabitRecord>> fetchHabitRecords() async {
     final habits = await fetchHabits();
     final completions = await fetchAllHabitCompletionDates();
