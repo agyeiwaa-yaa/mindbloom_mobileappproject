@@ -5,12 +5,17 @@ import '../features/habits/presentation/pages/habit_editor_page.dart';
 import '../features/journal/models/journal_entry.dart';
 import '../features/journal/presentation/pages/journal_editor_page.dart';
 import '../features/onboarding/presentation/pages/app_entry_page.dart';
+import '../features/onboarding/presentation/pages/splash_page.dart';
 
 class AppRouter {
   static final router = GoRouter(
     routes: [
       GoRoute(
         path: '/',
+        builder: (context, state) => const SplashPage(),
+      ),
+      GoRoute(
+        path: '/entry',
         builder: (context, state) => const AppEntryPage(),
       ),
       GoRoute(

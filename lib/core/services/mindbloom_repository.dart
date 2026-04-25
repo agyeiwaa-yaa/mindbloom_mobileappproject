@@ -102,4 +102,35 @@ class MindBloomRepository {
     }
     await _databaseService.toggleHabitCompletion(habitId: habitId, dayKey: dayKey);
   }
+
+  Future<void> syncLocalCacheToRemote() async {
+    if (!await _apiService.ping()) return;
+
+    final moods = await _databaseService.fetchMoods();
+    for (final mood in moods) {
+      final remote = await _apiService.saveMood(mood);
+      await _databaseService.upsertMood(remote);
+    }
+
+    final journals = await _databaseService.fetchJournals();
+    for (final journal in journals) {
+      final remote = await _apiService.saveJournal(journal);
+      await _databaseService.upsertJournal(remote);
+    }
+
+    final records = await _databaseService.fetchHabitRecords();
+    for (final record in records) {
+      final remoteHabit = await _apiService.saveHabit(record.habit);
+      await _databaseService.upsertHabit(remoteHabit);
+      for (final day in record.completedDates) {
+        await _apiService.toggleHabitCompletion(
+          habitId: record.habit.id,
+          completedOn: day,
+        );
+      }
+    }
+
+    final remoteRecords = await _apiService.fetchHabitRecords();
+    await _databaseService.replaceHabits(remoteRecords);
+  }
 }

@@ -296,8 +296,37 @@ class ApiService {
 
   String _normalizeBaseUrl(String url) {
     var normalized = url.trim();
-    if (normalized.endsWith('/')) {
-      normalized = normalized.substring(0, normalized.length - 1);
+    if (normalized.isEmpty) return normalized;
+
+    final parsed = Uri.tryParse(normalized);
+    if (parsed != null && parsed.hasScheme && parsed.host.isNotEmpty) {
+      final rawSegments = parsed.pathSegments.where((segment) => segment.isNotEmpty).toList();
+      final cleanedSegments = <String>[];
+
+      for (final segment in rawSegments) {
+        if (segment == 'health.php') {
+          continue;
+        }
+        cleanedSegments.add(segment);
+      }
+
+      if (cleanedSegments.isEmpty || cleanedSegments.last != 'api') {
+        cleanedSegments.add('api');
+      }
+
+      return parsed.replace(
+        pathSegments: cleanedSegments,
+        query: null,
+        fragment: null,
+      ).toString().replaceAll(RegExp(r'/$'), '');
+    }
+
+    if (normalized.endsWith('/health.php')) {
+      normalized = normalized.substring(0, normalized.length - '/health.php'.length);
+    }
+    normalized = normalized.replaceAll(RegExp(r'/$'), '');
+    if (!normalized.endsWith('/api')) {
+      normalized = '$normalized/api';
     }
     return normalized;
   }

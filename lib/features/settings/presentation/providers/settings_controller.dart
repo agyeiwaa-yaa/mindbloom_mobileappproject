@@ -81,7 +81,12 @@ class SettingsController extends AsyncNotifier<AppSettingsState> {
 
   Future<void> setApiBaseUrl(String url) async {
     await ref.read(apiServiceProvider).setBaseUrl(url);
-    await ref.read(apiServiceProvider).bootstrapUser();
+    try {
+      await ref.read(apiServiceProvider).bootstrapUser();
+      await ref.read(mindBloomRepositoryProvider).syncLocalCacheToRemote();
+    } catch (_) {
+      // Keep the saved URL even if the backend is still being configured.
+    }
     ref.invalidate(backendHealthProvider);
     state = AsyncData((await future).copyWith(apiBaseUrl: url));
   }
