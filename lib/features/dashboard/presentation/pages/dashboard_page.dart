@@ -1,7 +1,8 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../core/providers/core_providers.dart';
@@ -152,35 +153,40 @@ class DashboardPage extends ConsumerWidget {
                   height: 240,
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(22),
-                    child: GoogleMap(
-                      initialCameraPosition: CameraPosition(
-                        target: LatLng(bestMood!.latitude!, bestMood.longitude!),
-                        zoom: 13,
+                    child: FlutterMap(
+                      options: MapOptions(
+                        initialCenter: LatLng(bestMood!.latitude!, bestMood.longitude!),
+                        initialZoom: 13,
                       ),
-                      myLocationButtonEnabled: false,
-                      zoomControlsEnabled: false,
-                      mapToolbarEnabled: false,
-                      markers: {
-                        for (final entry in mapMoods)
-                          Marker(
-                            markerId: MarkerId(entry.id),
-                            position: LatLng(entry.latitude!, entry.longitude!),
-                            infoWindow: InfoWindow(
-                              title: entry.locationName?.isNotEmpty == true ? entry.locationName : 'Mood check-in',
-                              snippet: 'Mood score: ${entry.score}/5',
-                            ),
-                            icon: entry.id == bestMood.id
-                                ? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRose)
-                                : BitmapDescriptor.defaultMarkerWithHue(_googleHueForMood(entry.score)),
-                          ),
-                      },
+                      children: [
+                        TileLayer(
+                          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                          userAgentPackageName: 'com.maamebasoah.mindbloom',
+                        ),
+                        MarkerLayer(
+                          markers: mapMoods
+                              .map(
+                                (entry) => Marker(
+                                  point: LatLng(entry.latitude!, entry.longitude!),
+                                  width: 44,
+                                  height: 44,
+                                  child: Icon(
+                                    Icons.location_on,
+                                    color: entry.id == bestMood.id ? AppColors.berry : _moodColor(entry.score),
+                                    size: entry.id == bestMood.id ? 40 : 32,
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                        ),
+                        RichAttributionWidget(
+                          attributions: const [
+                            TextSourceAttribution('OpenStreetMap contributors'),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'If this area stays blank, add a valid Google Maps API key in the Android and iOS setup files described in the README.',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.muted),
                 ),
               ],
             ),
@@ -213,18 +219,18 @@ class DashboardPage extends ConsumerWidget {
     return 'You tend to feel best around ${best.key}, based on your saved mood entries there.';
   }
 
-  double _googleHueForMood(int score) {
+  Color _moodColor(int score) {
     switch (score) {
       case 5:
-        return BitmapDescriptor.hueYellow;
+        return AppColors.gold;
       case 4:
-        return BitmapDescriptor.hueRose;
+        return AppColors.berry;
       case 3:
-        return BitmapDescriptor.hueViolet;
+        return AppColors.rose;
       case 2:
-        return BitmapDescriptor.hueOrange;
+        return AppColors.coral;
       default:
-        return BitmapDescriptor.hueRed;
+        return AppColors.plum;
     }
   }
 }

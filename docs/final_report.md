@@ -43,8 +43,6 @@ The functional requirements of MindBloom are as follows:
 - The system shall turn accelerometer activity into a simple wellness prompt and bloom-energy indicator.
 - The system shall protect access to private data using passcode and biometric authentication where available.
 - The system shall store data locally for resilience when connectivity is unavailable.
-- The system shall support remote synchronization to a PHP/MySQL backend when the backend is configured.
-- The system shall allow the backend connection to be tested from within the app.
 
 ### 1.4 Non-Functional Requirements
 
@@ -54,13 +52,12 @@ The non-functional requirements of MindBloom are as follows:
 - The user interface should be visually calm, attractive, and wellness-focused.
 - The application should maintain readable colour contrast and accessible layout spacing.
 - The application should respond smoothly on Android devices with limited resources.
-- The system should remain usable offline for key functions even if the backend is unreachable.
+- The system should remain usable offline for key functions without relying on internet connectivity.
 - The application should be modular and maintainable for future extension.
-- The backend integration should use a secure separation between the mobile app and database credentials.
 - Sensitive user data such as passcodes should be stored securely.
 - The application should handle denied permissions gracefully.
 - The system should be reliable enough for daily use without frequent crashes or data loss.
-- The project should be deployable within a practical academic environment using Flutter and PHP hosting.
+- The project should be deployable within a practical academic environment using Flutter and local mobile storage.
 
 ### 1.5 Local Resources and Device Features Used
 
@@ -74,7 +71,7 @@ MindBloom satisfies the requirement for multiple local resources and device capa
 - Splash screen: implemented as part of the app startup flow
 - Biometric authentication: used for fingerprint or face unlock where supported
 
-The use of a web API is also included as a plus, because the application can connect to a PHP-based server and synchronize data to a MySQL database.
+The application focuses on dependable offline-first mobile use, which is practical for personal mental wellness tracking in everyday environments where connectivity may be inconsistent.
 
 ## Activity 2: Prototyping, Specification, Architecture and Design
 
@@ -102,7 +99,7 @@ The application contains the following major modules:
 - Location and map insight module
 - Sensor-based activity module
 - Dashboard and analytics module
-- Backend sync and settings module
+- Settings and privacy module
 
 ### 2.4 Architecture and Communication Flow
 
@@ -112,18 +109,18 @@ High-level communication flow:
 
 1. The user interacts with Flutter screens and widgets.
 2. Presentation controllers communicate with shared repositories.
-3. Repositories coordinate between local storage and the PHP API service.
+3. Repositories coordinate between presentation logic and local data services.
 4. Local data is stored in SQLite for offline resilience.
-5. Remote data is sent to PHP API endpoints.
-6. The PHP backend stores structured records in MySQL.
+5. Device services provide notifications, location, and sensor inputs.
+6. The application restores the saved records each time it is opened.
 
 ### 2.5 Layers of Implementation
 
 - Presentation layer: screens, widgets, navigation, state updates
 - Controller or state layer: Riverpod notifiers and providers
-- Service layer: notifications, biometrics, storage, sensors, geolocation, API communication
-- Repository layer: decides between local storage and remote sync
-- Data layer: SQLite local database and PHP/MySQL backend
+- Service layer: notifications, biometrics, storage, sensors, and geolocation
+- Repository layer: coordinates app features with local storage
+- Data layer: SQLite local database and secure local settings storage
 
 ### 2.6 Use Case Summary
 
@@ -139,7 +136,7 @@ Main user use cases include:
 - view mood trends and dashboard summaries
 - view mood-related map markers
 - protect access using passcode or biometrics
-- configure backend URL and synchronize data to the server
+- manage privacy settings and continue using the app offline
 
 ### 2.7 Prototype and Interface Design Notes
 
@@ -168,9 +165,8 @@ Textual ERD:
 
 ### 2.9 Database Schema Description
 
-The remote MySQL database stores:
+The local mobile database stores:
 
-- `users`
 - `mood_entries`
 - `journal_entries`
 - `habits`
@@ -178,7 +174,7 @@ The remote MySQL database stores:
 - `reminders`
 - `app_settings`
 
-These tables support secure and structured persistence of user wellness data through the PHP backend.
+These tables support secure and structured persistence of user wellness data directly on the device.
 
 ## Activity 3: Implementation
 
@@ -197,37 +193,25 @@ The following tools and technologies were used:
 - Image Picker for camera and photo access
 - Geolocator for location capture
 - Sensors Plus for motion and inactivity signal
-- Google Maps Flutter for map-based visualization
-- PHP for backend API development
-- MySQL for remote data persistence
-- phpMyAdmin for schema import and database administration
+- Flutter Map with OpenStreetMap tiles for map-based visualization
 - Git and GitHub for version control
 
 ### 3.2 Implementation Summary
 
 The application was implemented as a real mobile system rather than a static prototype. The Flutter app manages mood tracking, journaling, habits, dashboard analytics, reminders, map-based insight, and privacy controls. A splash screen was added to improve startup branding and provide a more polished first impression.
 
-The local database provides resilience so users do not lose progress if connectivity is weak. A PHP backend was added to support real server-based synchronization to MySQL, which makes the application more suitable for practical deployment and demonstrates full-stack capability. Journal images can be uploaded through the backend, while habit completions, moods, and journals are stored as structured records. The application therefore supports offline-first usage while still allowing later synchronization to the remote database when the backend becomes available.
+The local database provides resilience so users do not lose progress if connectivity is weak. Moods, journals, habits, reminders, and settings are stored directly on the device so the user can continue using the application without depending on internet access. This makes the final demo build more dependable for academic presentation and better suited to everyday self-tracking.
 
 ### 3.3 APIs and Components
 
-The project uses both device-side and server-side APIs:
+The project uses device-side APIs and platform integrations:
 
 - Device APIs for notifications, biometrics, location, and sensors
-- Google Maps API integration for map display
-- PHP REST-style endpoints for backend synchronization
-
-Main backend endpoints:
-
-- `health.php`
-- `bootstrap.php`
-- `moods.php`
-- `journals.php`
-- `habits.php`
+- OpenStreetMap tile service for map display
 
 ### 3.4 Current Quality and Remaining Considerations
 
-The current implementation is functional and demonstrates real mobile application development with local resources, backend support, and modern UI design. However, final backend success still depends on correct hosting deployment, database configuration, and API URL setup. Future enhancements could include therapist-facing dashboards, client sharing permissions, cloud backup accounts, richer analytics, and appointment-linked progress summaries.
+The current implementation is functional and demonstrates real mobile application development with local resources, dependable offline storage, and modern UI design. Future enhancements could include therapist-facing dashboards, optional cloud backup, client sharing permissions, richer analytics, and appointment-linked progress summaries.
 
 ## Functional Requirements Summary Table
 
@@ -244,7 +228,6 @@ The current implementation is functional and demonstrates real mobile applicatio
 | FR9 | The app shall read sensor activity context. |
 | FR10 | The app shall support passcode and biometric privacy lock. |
 | FR11 | The app shall save data locally for offline use. |
-| FR12 | The app shall support remote sync to PHP/MySQL. |
 
 ## Non-Functional Requirements Summary Table
 
