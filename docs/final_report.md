@@ -140,7 +140,7 @@ Main user use cases include:
 
 ### 2.7 Prototype and Interface Design Notes
 
-The user interface was designed with a soft pink wellness theme to create a calm and supportive feeling. Rounded cards, gentle gradients, and high-contrast typography were used to make the app feel approachable while remaining readable. The splash screen reinforces branding and communicates that the app is a safe personal wellness space. Navigation is bottom-tab based to support quick access to the Home, Mood, Journal, Habits, and Settings sections.
+The user interface was designed with a soft pink wellness theme to create a calm and supportive feeling. Rounded cards, gentle gradients, and high-contrast typography were used to make the app feel approachable while remaining readable. The splash screen reinforces branding and communicates that the app is a safe personal wellness space. A matching custom app icon was also designed so the installed application looks consistent with the splash experience and overall MindBloom identity. Navigation is bottom-tab based to support quick access to the Home, Mood, Journal, Habits, and Settings sections.
 
 ### 2.8 Entity Relationship Overview
 

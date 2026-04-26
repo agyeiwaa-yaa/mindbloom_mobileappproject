@@ -1,0 +1,26 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="160" y1="120" x2="860" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF5FA"/>
+      <stop offset="0.45" stop-color="#F7B6D0"/>
+      <stop offset="1" stop-color="#D95C8A"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(334 250) rotate(44) scale(510 420)">
+      <stop stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect x="64" y="64" width="896" height="896" rx="220" fill="url(#bg)"/>
+  <circle cx="334" cy="250" r="250" fill="url(#glow)"/>
+  <circle cx="764" cy="760" r="126" fill="#F6C7DB" fill-opacity="0.33"/>
+  <g fill="#FFFFFF">
+    <ellipse cx="512" cy="392" rx="84" ry="138"/>
+    <ellipse cx="388" cy="472" rx="80" ry="126" transform="rotate(-42 388 472)"/>
+    <ellipse cx="636" cy="472" rx="80" ry="126" transform="rotate(42 636 472)"/>
+    <ellipse cx="420" cy="626" rx="74" ry="108" transform="rotate(-18 420 626)"/>
+    <ellipse cx="604" cy="626" rx="74" ry="108" transform="rotate(18 604 626)"/>
+  </g>
+  <path d="M512 698C574.96 698 626 646.96 626 584C626 521.04 574.96 470 512 470C449.04 470 398 521.04 398 584C398 646.96 449.04 698 512 698Z" fill="#FFF5FA"/>
+  <path d="M512 662C554.974 662 589.75 627.224 589.75 584.25C589.75 541.276 554.974 506.5 512 506.5C469.026 506.5 434.25 541.276 434.25 584.25C434.25 627.224 469.026 662 512 662Z" fill="#D95C8A"/>
+  <path d="M512 638L488.2 608.6C464.6 579.2 456 562.2 456 541.8C456 509.4 480.2 486 511.4 486C528.4 486 544.6 493.8 556 507.2C567.4 493.8 583.6 486 600.6 486C631.8 486 656 509.4 656 541.8C656 562.2 647.4 579.2 623.8 608.8L600 638L556 686L512 638Z" fill="#FFF5FA"/>
+</svg>

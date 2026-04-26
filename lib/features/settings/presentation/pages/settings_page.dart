@@ -134,60 +134,6 @@ class SettingsPage extends ConsumerWidget {
                         'Even without internet, entries still save locally and remain visible the next time you open the app.',
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    Text(
-                      'This is the safest version for submission because it avoids server setup issues and keeps the full wellness workflow working on-device.',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.muted,
-                            height: 1.4,
-                          ),
-                    ),
-                    const SizedBox(height: 14),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: AppColors.blush.withValues(alpha: 0.55),
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'What is stored on this phone?',
-                            style: TextStyle(fontWeight: FontWeight.w700),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text('1. Mood check-ins with notes and location'),
-                          const Text('2. Journal entries and attached photos'),
-                          const Text('3. Habits, streaks, and completion history'),
-                          const Text('4. Reminder times and privacy settings'),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: AppColors.blush),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Demo talking point', style: Theme.of(context).textTheme.titleSmall),
-                          const SizedBox(height: 8),
-                          const Text('You can explain that MindBloom uses local mobile storage for reliable offline-first use, which is practical for personal wellness tracking when internet access is limited.'),
-                          const SizedBox(height: 8),
-                          Text(
-                            'This still satisfies the storage/database requirement because user records persist on the device across sessions.',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.plum),
-                          ),
-                        ],
-                      ),
-                    ),
                   ],
                 ),
               ),
