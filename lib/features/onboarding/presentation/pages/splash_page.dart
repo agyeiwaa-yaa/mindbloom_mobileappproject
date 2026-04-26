@@ -1,23 +1,35 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_colors.dart';
+import '../../../../core/providers/core_providers.dart';
 
-class SplashPage extends StatefulWidget {
+class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
 
   @override
-  State<SplashPage> createState() => _SplashPageState();
+  ConsumerState<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends State<SplashPage> {
+class _SplashPageState extends ConsumerState<SplashPage> {
   Timer? _timer;
 
   @override
   void initState() {
     super.initState();
+    Future<void>.microtask(() async {
+      try {
+        final api = ref.read(apiServiceProvider);
+        if (await api.isConfigured()) {
+          await ref.read(mindBloomRepositoryProvider).syncLocalCacheToRemote();
+        }
+      } catch (_) {
+        // Ignore startup sync issues and let the app continue normally.
+      }
+    });
     _timer = Timer(const Duration(milliseconds: 1900), () {
       if (mounted) {
         context.go('/entry');

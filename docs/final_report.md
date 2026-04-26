@@ -40,6 +40,7 @@ The functional requirements of MindBloom are as follows:
 - The system shall capture basic location coordinates and present location-based wellness insight.
 - The system shall display a map view showing areas related to mood entries.
 - The system shall read device sensor signals to infer motion or inactivity context.
+- The system shall turn accelerometer activity into a simple wellness prompt and bloom-energy indicator.
 - The system shall protect access to private data using passcode and biometric authentication where available.
 - The system shall store data locally for resilience when connectivity is unavailable.
 - The system shall support remote synchronization to a PHP/MySQL backend when the backend is configured.
@@ -196,7 +197,7 @@ The following tools and technologies were used:
 - Image Picker for camera and photo access
 - Geolocator for location capture
 - Sensors Plus for motion and inactivity signal
-- Flutter Map with OpenStreetMap tiles for map-based visualization
+- Google Maps Flutter for map-based visualization
 - PHP for backend API development
 - MySQL for remote data persistence
 - phpMyAdmin for schema import and database administration
@@ -206,14 +207,14 @@ The following tools and technologies were used:
 
 The application was implemented as a real mobile system rather than a static prototype. The Flutter app manages mood tracking, journaling, habits, dashboard analytics, reminders, map-based insight, and privacy controls. A splash screen was added to improve startup branding and provide a more polished first impression.
 
-The local database provides resilience so users do not lose progress if connectivity is weak. A PHP backend was added to support real server-based synchronization to MySQL, which makes the application more suitable for practical deployment and demonstrates full-stack capability. Journal images can be uploaded through the backend, while habit completions, moods, and journals are stored as structured records.
+The local database provides resilience so users do not lose progress if connectivity is weak. A PHP backend was added to support real server-based synchronization to MySQL, which makes the application more suitable for practical deployment and demonstrates full-stack capability. Journal images can be uploaded through the backend, while habit completions, moods, and journals are stored as structured records. The application therefore supports offline-first usage while still allowing later synchronization to the remote database when the backend becomes available.
 
 ### 3.3 APIs and Components
 
 The project uses both device-side and server-side APIs:
 
 - Device APIs for notifications, biometrics, location, and sensors
-- OpenStreetMap tile service for map display
+- Google Maps API integration for map display
 - PHP REST-style endpoints for backend synchronization
 
 Main backend endpoints:

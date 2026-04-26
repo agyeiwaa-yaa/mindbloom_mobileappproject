@@ -8,7 +8,7 @@ MindBloom is a Flutter mental wellness app for mood tracking, journaling, habit 
 - local persistence for offline resilience
 - PHP/MySQL backend support for real remote sync
 - journal photo uploads to the backend
-- mood map using OpenStreetMap tiles
+- Google Maps-based mood map support
 - habit and journal reminder scheduling
 - biometric and passcode lock testing
 
@@ -107,6 +107,66 @@ Important:
 - the Flutter app should point to the public `.../api` folder, not to the phpMyAdmin page
 - a working API base URL usually looks like `https://your-domain.com/mindbloom_api/api`
 
+Example `config.php` values for your hosting setup:
+
+```php
+<?php
+
+return [
+    'db_host' => 'localhost',
+    'db_port' => 3306,
+    'db_name' => 'mobileapps_2026B_maameyaa_basoah',
+    'db_user' => 'maameyaa.basoah',
+    'db_pass' => 'maameyaa',
+    'upload_dir' => __DIR__ . '/../uploads',
+];
+```
+
+If `localhost` fails, ask your hosting provider for the MySQL host name used by PHP applications.
+
+## Google Maps Setup
+
+Google Maps requires a real API key. According to the official `google_maps_flutter` package and Google Maps for Flutter setup guide, Android needs the key in `AndroidManifest.xml`, and iOS needs it provided through `AppDelegate.swift` after enabling the Maps SDK for each platform. Sources: [google_maps_flutter on pub.dev](https://pub.dev/packages/google_maps_flutter) and [Google Maps for Flutter setup](https://developers.google.com/maps/flutter-package/config).
+
+### Android
+
+Open:
+
+```text
+android/app/src/main/AndroidManifest.xml
+```
+
+Replace:
+
+```xml
+android:value="YOUR_GOOGLE_MAPS_API_KEY"
+```
+
+with your actual key.
+
+### iOS
+
+Open:
+
+```text
+ios/Runner/Info.plist
+```
+
+Replace:
+
+```xml
+<string>YOUR_GOOGLE_MAPS_API_KEY</string>
+```
+
+with your actual key.
+
+Also make sure you enable:
+
+- Maps SDK for Android
+- Maps SDK for iOS
+
+in your Google Cloud project.
+
 ## Flutter App Setup
 
 ### Install dependencies
@@ -164,11 +224,13 @@ build/app/outputs/flutter-apk/app-release.apk
 - habit tracking with streak logic
 - local reminder scheduling for habits and journaling
 - dashboard summaries and mood trend chart
-- map-based location insight
+- map-based location insight with Google Maps support
 - biometric and passcode protection
+- offline-first local saving with later sync to PHP/MySQL
 
 ## Notes
 
 - if the backend URL is not configured or unreachable, the app still falls back to local data so testing can continue
+- startup now attempts a background sync when a backend URL is configured
 - new journal images are saved more reliably and can also upload to the PHP backend
-- OpenStreetMap is used for the map tile layer
+- the app supports offline usage for core data entry through local SQLite storage

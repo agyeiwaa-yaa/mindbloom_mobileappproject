@@ -178,6 +178,21 @@ class SettingsPage extends ConsumerWidget {
                           label: const Text('Test connection'),
                         ),
                         if (settings.apiBaseUrl?.isNotEmpty == true)
+                          FilledButton.tonalIcon(
+                            onPressed: () async {
+                              await ref.read(mindBloomRepositoryProvider).syncLocalCacheToRemote();
+                              ref.invalidate(backendHealthProvider);
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Sync attempt finished. If the backend is live, your local entries should now be copied to MySQL.'),
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.cloud_upload_outlined),
+                            label: const Text('Sync now'),
+                          ),
+                        if (settings.apiBaseUrl?.isNotEmpty == true)
                           TextButton.icon(
                             onPressed: () async {
                               await ref.read(settingsControllerProvider.notifier).clearApiBaseUrl();
@@ -190,6 +205,14 @@ class SettingsPage extends ConsumerWidget {
                             label: const Text('Clear URL'),
                           ),
                       ],
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Offline mode is supported. If the backend is unavailable, MindBloom still saves your data locally on the phone and can sync it later when the server starts working.',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.muted,
+                            height: 1.4,
+                          ),
                     ),
                     const SizedBox(height: 14),
                     Container(

@@ -1,11 +1,11 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../core/providers/core_providers.dart';
+import '../../../../core/services/sensor_service.dart';
 import '../../../../core/utils/streak_utils.dart';
 import '../../../../shared/widgets/section_card.dart';
 import '../../../habits/presentation/providers/habits_controller.dart';
@@ -152,40 +152,35 @@ class DashboardPage extends ConsumerWidget {
                   height: 240,
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(22),
-                    child: FlutterMap(
-                      options: MapOptions(
-                        initialCenter: LatLng(bestMood!.latitude!, bestMood.longitude!),
-                        initialZoom: 13,
+                    child: GoogleMap(
+                      initialCameraPosition: CameraPosition(
+                        target: LatLng(bestMood!.latitude!, bestMood.longitude!),
+                        zoom: 13,
                       ),
-                      children: [
-                        TileLayer(
-                          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                          userAgentPackageName: 'com.maamebasoah.mindbloom',
-                        ),
-                        MarkerLayer(
-                          markers: mapMoods
-                              .map(
-                                (entry) => Marker(
-                                  point: LatLng(entry.latitude!, entry.longitude!),
-                                  width: 44,
-                                  height: 44,
-                                  child: Icon(
-                                    Icons.location_on,
-                                    color: entry.id == bestMood.id ? AppColors.berry : _moodColor(entry.score),
-                                    size: entry.id == bestMood.id ? 40 : 32,
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                        ),
-                        RichAttributionWidget(
-                          attributions: const [
-                            TextSourceAttribution('OpenStreetMap contributors'),
-                          ],
-                        ),
-                      ],
+                      myLocationButtonEnabled: false,
+                      zoomControlsEnabled: false,
+                      mapToolbarEnabled: false,
+                      markers: {
+                        for (final entry in mapMoods)
+                          Marker(
+                            markerId: MarkerId(entry.id),
+                            position: LatLng(entry.latitude!, entry.longitude!),
+                            infoWindow: InfoWindow(
+                              title: entry.locationName?.isNotEmpty == true ? entry.locationName : 'Mood check-in',
+                              snippet: 'Mood score: ${entry.score}/5',
+                            ),
+                            icon: entry.id == bestMood.id
+                                ? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRose)
+                                : BitmapDescriptor.defaultMarkerWithHue(_googleHueForMood(entry.score)),
+                          ),
+                      },
                     ),
                   ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'If this area stays blank, add a valid Google Maps API key in the Android and iOS setup files described in the README.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.muted),
                 ),
               ],
             ),
@@ -193,19 +188,7 @@ class DashboardPage extends ConsumerWidget {
         ],
         const SizedBox(height: 12),
         SectionCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Sensor activity', style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 8),
-              Text(
-                latestActivity == null
-                    ? 'Move the phone a little and this card will update.'
-                    : 'Current motion state: ${latestActivity.label} (${latestActivity.motionLevel.toStringAsFixed(2)}). '
-                        'This uses the accelerometer to estimate whether you are still or moving around.',
-              ),
-            ],
-          ),
+          child: _SensorStoryCard(snapshot: latestActivity),
         ),
       ],
     );
@@ -230,18 +213,18 @@ class DashboardPage extends ConsumerWidget {
     return 'You tend to feel best around ${best.key}, based on your saved mood entries there.';
   }
 
-  Color _moodColor(int score) {
+  double _googleHueForMood(int score) {
     switch (score) {
       case 5:
-        return AppColors.gold;
+        return BitmapDescriptor.hueYellow;
       case 4:
-        return AppColors.berry;
+        return BitmapDescriptor.hueRose;
       case 3:
-        return AppColors.rose;
+        return BitmapDescriptor.hueViolet;
       case 2:
-        return AppColors.coral;
+        return BitmapDescriptor.hueOrange;
       default:
-        return AppColors.plum;
+        return BitmapDescriptor.hueRed;
     }
   }
 }
@@ -280,3 +263,85 @@ class _StatCard extends StatelessWidget {
 final activityProvider = StreamProvider((ref) {
   return ref.read(sensorServiceProvider).activityStream();
 });
+
+class _SensorStoryCard extends StatelessWidget {
+  const _SensorStoryCard({required this.snapshot});
+
+  final ActivitySnapshot? snapshot;
+
+  @override
+  Widget build(BuildContext context) {
+    final prompt = snapshot?.wellnessPrompt ?? 'Move the phone a little and MindBloom will turn that motion into a small wellness suggestion.';
+    final energy = (snapshot?.bloomScore ?? 0) / 100;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Sensor activity', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
+        Text(
+          snapshot == null
+              ? 'The accelerometer is ready. Once the device moves, this section will estimate your motion state and suggest a small next step.'
+              : 'Current motion state: ${snapshot!.label} (${snapshot!.motionLevel.toStringAsFixed(2)}).',
+        ),
+        const SizedBox(height: 14),
+        Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Bloom energy',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppColors.muted,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(999),
+                    child: LinearProgressIndicator(
+                      minHeight: 12,
+                      value: energy.clamp(0, 1),
+                      backgroundColor: AppColors.blush,
+                      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.berry),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            Text(
+              '${snapshot?.bloomScore ?? 0}%',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: AppColors.plum,
+                    fontWeight: FontWeight.w800,
+                  ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.blush.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Text(
+            prompt,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.4),
+          ),
+        ),
+        if (snapshot?.shakeDetected == true) ...[
+          const SizedBox(height: 10),
+          Text(
+            'Shake moments are treated like a quick energy spike, which can help you decide whether to log a mood, mark a habit, or add a short journal note.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.muted),
+          ),
+        ],
+      ],
+    );
+  }
+}
